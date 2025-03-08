@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机事件生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #f0f0f0;
+        }
+        #content-container {
+            margin: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #wallet-container {
+            margin: 20px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        #week-container {
+            margin: 20px;
+            padding: 15px;
+            background-color: #d4edda;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        #wallet-icon, #week-icon {
+            font-size: 30px;
+            margin-right: 10px;
+        }
+        #wallet-amount, #week-number {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #reset-button {
+            background-color: #ff9800;
+        }
+        #reset-button:hover {
+            background-color: #e68a00;
+        }
+        .cartoon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>200块活多久</h1>
+    <div id="content-container">
+        <div id="content-cartoon" class="cartoon">🤔</div>
+        <p id="content-text">点击按钮开始事件！</p>
+    </div>
+    <div id="wallet-container">
+        <span id="wallet-icon">💰</span>
+        <span id="wallet-amount">200块</span>
+    </div>
+    <div id="week-container">
+        <span id="week-icon">📅</span>
+        <span id="week-number">第0周</span>
+    </div>
+    <button id="generate-button" onclick="generateContent()">开始</button>
+    <button id="reset-button" onclick="resetAll()">重置</button>
+
+    <script>
+        // 事件和结果数据，包含金额变化
+        const eventResultPairs = [
+            { event: { text: "在路上走路被易拉罐绊倒", cartoon: "🥫" }, result: { text: "花了30块买跌打药", cartoon: "💊", moneyChange: -30 } },
+            { event: { text: "坐公交车忘带零钱", cartoon: "🚌" }, result: { text: "多走了5公里才到家", cartoon: "🚶", moneyChange: 0 } },
+            { event: { text: "买奶茶不小心洒了", cartoon: "🥤" }, result: { text: "又花了15块买了一杯", cartoon: "💸", moneyChange: -15 } },
+            { event: { text: "出门下雨伞坏了", cartoon: "☂️" }, result: { text: "花了50块买了新伞", cartoon: "🛍️", moneyChange: -50 } },
+            { event: { text: "考试前一天笔没墨了", cartoon: "✍️" }, result: { text: "花了10块买了新笔", cartoon: "🖋️", moneyChange: -10 } },
+            { event: { text: "路边捡到一个钱包", cartoon: "💰" }, result: { text: "里面有200块现金", cartoon: "💵", moneyChange: 200 } },
+            { event: { text: "上班忘带工卡", cartoon: "💼" }, result: { text: "花了20块办了临时卡", cartoon: "📇", moneyChange: -20 } },
+            { event: { text: "新鞋子穿了一天就破了", cartoon: "👟" }, result: { text: "花了100块修鞋", cartoon: "🔧", moneyChange: -100 } },
+            { event: { text: "吃外卖发现菜里有虫", cartoon: "🍔" }, result: { text: "退了25块餐费", cartoon: "💳", moneyChange: 25 } },
+            { event: { text: "手机屏幕不小心摔裂了", cartoon: "📱" }, result: { text: "花了300块换屏幕", cartoon: "🛠️", moneyChange: -300 } },
+            { event: { text: "超市购物排队被插队", cartoon: "🛒" }, result: { text: "多等了15分钟才结账", cartoon: "⏳", moneyChange: 0 } },
+            { event: { text: "参加抽奖中了小礼品", cartoon: "🎁" }, result: { text: "价值50块的杯子", cartoon: "☕", moneyChange: 50 } },
+            { event: { text: "周末被叫去加班", cartoon: "⏰" }, result: { text: "加班费拿了200块", cartoon: "💰", moneyChange: 200 } },
+            { event: { text: "骑车撞到路边石头", cartoon: "🚲" }, result: { text: "修车花了80块", cartoon: "🔧", moneyChange: -80 } },
+            { event: { text: "喝咖啡烫到舌头", cartoon: "☕" }, result: { text: "买了10块冰水缓解", cartoon: "🧊", moneyChange: -10 } },
+            { event: { text: "跑步时鞋带散了", cartoon: "🏃" }, result: { text: "摔倒擦伤花了20块买药", cartoon: "🩹", moneyChange: -20 } },
+            { event: { text: "下班路上堵车严重", cartoon: "🚗" }, result: { text: "晚到家1小时", cartoon: "🌙", moneyChange: 0 } },
+            { event: { text: "收到朋友寄来的包裹", cartoon: "📦" }, result: { text: "里面有价值100块的零食", cartoon: "🍫", moneyChange: 100 } },
+            { event: { text: "电脑突然黑屏重启", cartoon: "💻" }, result: { text: "修电脑花了150块", cartoon: "🔧", moneyChange: -150 } },
+            { event: { text: "出门被狗追了一路", cartoon: "🐶" }, result: { text: "跑了3公里才甩掉", cartoon: "🏃", moneyChange: 0 } },
+            { event: { text: "买东西发现有折扣", cartoon: "🏷️" }, result: { text: "省了40块钱", cartoon: "💵", moneyChange: 40 } },
+            { event: { text: "睡过头错过早班车", cartoon: "🛌" }, result: { text: "打车花了60块", cartoon: "🚕", moneyChange: -60 } },
+            { event: { text: "朋友借钱忘了还", cartoon: "🤝" }, result: { text: "损失了100块", cartoon: "😞", moneyChange: -100 } },
+            { event: { text: "衣服被洗衣机染色", cartoon: "👕" }, result: { text: "花了80块买新衣服", cartoon: "🛍️", moneyChange: -80 } },
+            { event: { text: "地铁上捡到一张卡", cartoon: "🚇" }, result: { text: "里面有50块余额", cartoon: "💳", moneyChange: 50 } },
+            { event: { text: "熬夜赶工眼睛酸痛", cartoon: "🌙" }, result: { text: "买眼药水花了25块", cartoon: "💧", moneyChange: -25 } },
+            { event: { text: "吃烧烤牙疼了", cartoon: "🍖" }, result: { text: "看牙花了200块", cartoon: "🦷", moneyChange: -200 } },
+            { event: { text: "快递送到时包装破了", cartoon: "📦" }, result: { text: "退货省了30块运费", cartoon: "💸", moneyChange: 30 } },
+            { event: { text: "考试忘带计算器", cartoon: "📚" }, result: { text: "花了15块借了一个", cartoon: "🖩", moneyChange: -15 } },
+            { event: { text: "超市买菜忘了拿找零", cartoon: "🛍️" }, result: { text: "少拿了10块钱", cartoon: "😣", moneyChange: -10 } },
+            { event: { text: "同事请喝下午茶", cartoon: "🍰" }, result: { text: "省了20块餐费", cartoon: "💵", moneyChange: 20 } },
+            { event: { text: "走路撞到路灯杆", cartoon: "🚧" }, result: { text: "买药花了15块", cartoon: "🩹", moneyChange: -15 } },
+            { event: { text: "收到意外的现金红包", cartoon: "🧧" }, result: { text: "拿到了300块", cartoon: "💰", moneyChange: 300 } },
+            { event: { text: "玩游戏充值没到账", cartoon: "🎮" }, result: { text: "白花了50块", cartoon: "😡", moneyChange: -50 } },
+            { event: { text: "出门忘带钥匙", cartoon: "🔑" }, result: { text: "开锁花了90块", cartoon: "🔓", moneyChange: -90 } },
+            { event: { text: "电影票临时涨价", cartoon: "🎬" }, result: { text: "多花了20块看电影", cartoon: "🎥", moneyChange: -20 } },
+            { event: { text: "鞋底踩到口香糖", cartoon: "🍬" }, result: { text: "清理花了10分钟", cartoon: "⏳", moneyChange: 0 } },
+            { event: { text: "面试迟到错过机会", cartoon: "👔" }, result: { text: "浪费了2小时准备", cartoon: "😞", moneyChange: 0 } },
+            { event: { text: "点餐服务员送错菜", cartoon: "🍽️" }, result: { text: "退了15块差价", cartoon: "💳", moneyChange: 15 } },
+            { event: { text: "公园散步被蚊子咬", cartoon: "🌳" }, result: { text: "买药膏花了12块", cartoon: "🩺", moneyChange: -12 } },
+            { event: { text: "骑车轮胎被扎破", cartoon: "🚲" }, result: { text: "修车花了40块", cartoon: "🔧", moneyChange: -40 } },
+            { event: { text: "收到同事送的小礼物", cartoon: "🎀" }, result: { text: "价值30块的钥匙扣", cartoon: "🔑", moneyChange: 30 } },
+            { event: { text: "空调漏水坏了", cartoon: "❄️" }, result: { text: "维修花了150块", cartoon: "🛠️", moneyChange: -150 } },
+            { event: { text: "抽奖中了超市券", cartoon: "🎫" }, result: { text: "省了50块购物费", cartoon: "🛒", moneyChange: 50 } },
+            { event: { text: "上课手机响被没收", cartoon: "🏫" }, result: { text: "花了1小时去取回", cartoon: "⏰", moneyChange: 0 } },
+            { event: { text: "收到意外加班费", cartoon: "💼" }, result: { text: "多赚了100块", cartoon: "💰", moneyChange: 100 } },
+            { event: { text: "雨天鞋子进水", cartoon: "🌧️" }, result: { text: "烘干花了20块", cartoon: "👟", moneyChange: -20 } },
+            { event: { text: "朋友临时取消聚会", cartoon: "📅" }, result: { text: "省下80块饭钱", cartoon: "💵", moneyChange: 80 } },
+            { event: { text: "买水果发现坏了一半", cartoon: "🍎" }, result: { text: "损失了15块", cartoon: "😣", moneyChange: -15 } },
+            { event: { text: "公交车上丢了雨伞", cartoon: "🚌" }, result: { text: "又买一把花了25块", cartoon: "☂️", moneyChange: -25 } }
+        ];
+
+        // 初始化变量
+        let usedPairs = [];
+        let currentPair = null;
+        let showingEvent = true;
+        let walletAmount = 200;
+        let weekNumber = 0;
+        const generateButton = document.getElementById("generate-button");
+
+        function updateWallet(amount) {
+            walletAmount += amount;
+            if (walletAmount <= 0) {
+                walletAmount = 0;
+                document.getElementById("wallet-amount").textContent = "破产了！";
+                document.getElementById("wallet-amount").style.color = "red";
+                generateButton.disabled = true; // 破产后禁用生成按钮
+            } else {
+                document.getElementById("wallet-amount").textContent = `${walletAmount}块`;
+                document.getElementById("wallet-amount").style.color = "black";
+            }
+        }
+
+        function updateWeek() {
+            weekNumber++;
+            document.getElementById("week-number").textContent = `第${weekNumber}周`;
+        }
+
+        function generateContent() {
+            const contentCartoon = document.getElementById("content-cartoon");
+            const contentText = document.getElementById("content-text");
+
+            if (showingEvent) {
+                if (usedPairs.length >= eventResultPairs.length) usedPairs = [];
+                let pairIndex;
+                do {
+                    pairIndex = Math.floor(Math.random() * eventResultPairs.length);
+                } while (usedPairs.includes(pairIndex));
+                usedPairs.push(pairIndex);
+
+                currentPair = eventResultPairs[pairIndex];
+                contentCartoon.textContent = currentPair.event.cartoon;
+                contentText.textContent = currentPair.event.text;
+                showingEvent = false;
+            } else {
+                contentCartoon.textContent = currentPair.result.cartoon;
+                contentText.textContent = currentPair.result.text;
+                updateWallet(currentPair.result.moneyChange);
+                updateWeek(); // 事件完成后周数加1
+                showingEvent = true;
+            }
+        }
+
+        function resetAll() {
+            walletAmount = 200;
+            weekNumber = 0;
+            document.getElementById("wallet-amount").textContent = "200块";
+            document.getElementById("wallet-amount").style.color = "black";
+            document.getElementById("week-number").textContent = "第0周";
+            usedPairs = [];
+            showingEvent = true;
+            document.getElementById("content-cartoon").textContent = "🤔";
+            document.getElementById("content-text").textContent = "点击按钮开始生成事件！";
+            generateButton.disabled = false; // 重置后启用生成按钮
+        }
+    </script>
+</body>
+</html>
